@@ -11,7 +11,9 @@
              :col col,
              :visited? false,
              :bottom? true,
-             :right? true}))))
+             :right? true,
+             :start? (and (= 0 row) (= 0 col))
+             }))))
   )                                                         ;end of create-rooms
 
 (defn possible-neighbors [rooms row col]
@@ -53,6 +55,15 @@
     )                                                       ;end of condition
   )                                                         ;end of tear-down-wall
 
+(defn set-end-if-necessary [rooms row col]
+  (let [filtered-rooms (filter :end? (flatten rooms))]
+    (if (pos? (count filtered-rooms))
+      rooms
+      (assoc-in rooms [row col :end?] true))
+    )
+  )
+
+
 (defn create-maze [rooms row col]
   (let [rooms (assoc-in rooms [row col :visited?] true)
         next-room (random-neighbor rooms row col)]
@@ -67,7 +78,7 @@
             )
           )                                                 ;end of loop
         )
-      rooms
+      (set-end-if-necessary rooms row col)
       )                                                     ;end of if
     )                                                       ;end of let
   )                                                         ;end of create-maze
@@ -75,6 +86,7 @@
 
 (defn -main [& args]
   (let [rooms (create-rooms)
+        ;rooms (assoc-in rooms [0 0 :start?] true)
         rooms (create-maze rooms 0 0)]
     (doseq [row rooms]                                      ;print top walls of underscores for top row
       (print " _"))
@@ -82,7 +94,11 @@
       (doseq [row rooms]                                    ;for each list inside rooms, loop over it
         (print "|")                                         ;print all left side walls at beginnig of row
         (doseq [room row]                                   ;looping over each room in each row
-               (print (str (if (:bottom? room) "_" " ")
+               (print (str (cond
+                             (:start? room) "o"
+                             (:end? room) "x"
+                             (:bottom? room) "_"
+                             :else? " ")
                            (if (:right? room) "|" " "))))                                ;print grid
         (println)
         )
